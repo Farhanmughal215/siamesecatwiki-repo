@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>siamese.wiki — the independent Siamese cat reference</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="description" content="An independent wiki about the Siamese cat breed. Colors, behavior, health, history — written carefully, with sources." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,400..600&family=Source+Serif+Pro:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css?v=4" />
+<link rel="icon" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%23c56b4a'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-family='Fraunces,serif' font-size='18' font-weight='500' fill='%23fbf6ec'%3ES%3C/text%3E%3C/svg%3E" />
+</head>
+<body>
+<div id="chrome-header"></div>
+
+<main>
+  <section class="hero wrap">
+    <div class="eyebrow">the independent siamese cat reference</div>
+    <h1>Everything worth knowing<br>about <em>Siamese cats.</em></h1>
+    <p class="lede">
+      Colors, behavior, health, history — thirty long-form articles, cited from veterinary journals, breed registries, and primary historical sources. No product roundups, no affiliate links, no filler.
+    </p>
+    <div class="searchbox">
+      <span style="color:var(--ink-faint); font-size:15px;">🔍</span>
+      <input id="homeSearch" placeholder="Search: 'seal point', 'why so vocal', 'HCM'…" />
+      <span class="shortcut">↵</span>
+    </div>
+    <div class="hero-stats">
+      <div><strong id="statArticles">30</strong>articles</div>
+      <div><strong id="statWords">—</strong>words</div>
+      <div><strong>6</strong>topic areas</div>
+      <div><strong>16</strong>rescued cats waiting in bangkok</div>
+    </div>
+  </section>
+
+  <section class="section wrap">
+    <div class="section-head">
+      <h2>Start here</h2>
+      <a class="more" href="articles.html">Browse all 30 articles →</a>
+    </div>
+    <div class="featured-grid" id="featuredGrid"><!-- filled by JS --></div>
+  </section>
+
+  <section class="section wrap">
+    <div class="section-head">
+      <h2>Browse by topic</h2>
+    </div>
+    <div class="cat-grid" id="catGrid"><!-- filled by JS --></div>
+  </section>
+
+  <section class="section wrap">
+    <div class="cta-footer">
+      <div>
+        <div class="label">Sponsored · Siamese Cat Café</div>
+        <h3>There are sixteen of them living in Bangkok right now.</h3>
+        <p>This wiki exists because a cat café in Bangna, Bangkok rescued sixteen Siamese cats and wanted the world to understand the breed before deciding to own one. If you're passing through, come say hi.</p>
+        <div class="hours">Open daily · 8 AM – 9 PM · Free entry · Bangna, Bangkok</div>
+      </div>
+      <a class="map-btn" href="https://maps.app.goo.gl/o2Z7yN1yRLNKScro8" target="_blank" rel="noopener">
+        Open in Google Maps →
+      </a>
+    </div>
+  </section>
+
+  <section class="section wrap">
+    <div class="section-head">
+      <h2>Recent additions</h2>
+      <a class="more" href="articles.html">All →</a>
+    </div>
+    <div class="featured-grid" id="recentGrid" style="grid-template-columns: repeat(3, 1fr);"></div>
+  </section>
+</main>
+
+<div id="chrome-footer"></div>
+
+<script src="site.js?v=4"></script>
+<script src="thumbs.js?v=4"></script>
+<script>
+(async () => {
+  renderChrome('home');
+  const m = await getManifest();
+  
+  // Stats
+  const totalWords = m.reduce((s,a) => s + a.words, 0);
+  document.getElementById('statWords').textContent = (totalWords/1000).toFixed(0) + 'k';
+  
+  // Featured: pick curated order — breed guide big, then 4 more
+  const featuredSlugs = [
+    'siamese-cat-the-complete-breed-guide',
+    'are-siamese-cats-good-pets',
+    'why-are-siamese-cats-so-vocal',
+    'seal-point-siamese-the-complete-guide',
+    'siamese-cat-health-problems-the-ones-that-matter'
+  ];
+  const featured = featuredSlugs.map(s => m.find(a => a.slug === s)).filter(Boolean);
+  const [big, ...rest] = featured;
+  
+  const fg = document.getElementById('featuredGrid');
+  fg.innerHTML = `
+    <a class="card big" href="${articleHref(big)}" data-cat="${big.category}">
+      <div class="thumb">${Thumbs.thumbHtml(big, { wide: true })}</div>
+      <div class="meta"><span class="pill point">${big.category}</span><span>${readingLabel(big)}</span></div>
+      <h3>${big.title}</h3>
+      <p>${big.deck || big.quickAnswer.substring(0, 160) + '…'}</p>
+      <div class="card-foot">Read the guide →</div>
+    </a>
+    ${rest.slice(0, 4).map(a => `
+      <a class="card compact" href="${articleHref(a)}" data-cat="${a.category}">
+        <div class="thumb">${Thumbs.thumbHtml(a)}</div>
+        <div class="meta"><span class="pill">${a.category}</span><span>${readingLabel(a)}</span></div>
+        <h3>${a.title}</h3>
+        <p>${(a.deck || a.quickAnswer).substring(0, 140)}${(a.deck || a.quickAnswer).length > 140 ? '…' : ''}</p>
+      </a>
+    `).join('')}
+  `;
+  
+  // Categories
+  const cats = [...new Set(m.map(a => a.category))];
+  const catOrder = ['Overview', 'Colors & Points', 'Behavior & Personality', 'Care & Diet', 'Health', 'History & Culture'];
+  const catsSorted = catOrder.filter(c => cats.includes(c));
+  document.getElementById('catGrid').innerHTML = catsSorted.map(c => {
+    const n = m.filter(a => a.category === c).length;
+    return `<a class="cat-card" href="articles.html#${categorySlug(c)}">
+      <div class="thumb"><img src="${Thumbs.categoryPlaceholder(c)}" alt="${c}"/></div>
+      <div class="n">${n} article${n>1?'s':''}</div>
+      <h3>${c}</h3>
+    </a>`;
+  }).join('');
+  
+  // Recent: last 6 (sorted by num desc as proxy for "most recent written")
+  const recent = [...m].sort((a,b) => b.num - a.num).slice(0, 6);
+  document.getElementById('recentGrid').innerHTML = recent.map(a => `
+    <a class="card compact" href="${articleHref(a)}" data-cat="${a.category}" style="padding: 22px;">
+      <div class="thumb">${Thumbs.thumbHtml(a)}</div>
+      <div class="meta"><span class="pill">${a.category}</span><span>${readingLabel(a)}</span></div>
+      <h3 style="font-size:20px;">${a.title}</h3>
+      <p style="font-size:14.5px;">${(a.deck || a.quickAnswer).substring(0, 130)}…</p>
+    </a>
+  `).join('');
+  
+  // Search
+  const input = document.getElementById('homeSearch');
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      const q = input.value.trim();
+      if (q) location.href = `articles.html?q=${encodeURIComponent(q)}`;
+    }
+  });
+})();
+</script>
+</body>
+</html>
